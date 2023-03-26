@@ -6,6 +6,20 @@
 use crate::bitmap::*;
 use core::ops::{BitAnd, BitAndAssign, BitOrAssign, Deref};
 
+impl<'map, const BYTES: usize> Deref for BitRef<'map, BYTES> {
+    type Target = bool;
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+impl<'map, const BYTES: usize> Deref for BitRefMut<'map, BYTES> {
+    type Target = bool;
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
 impl<const BYTES: usize, const N: usize> BitAnd<[u8; N]> for &Bitmap<BYTES> {
     type Output = [u8; N];
 
@@ -130,157 +144,82 @@ impl<const BYTES: usize, const N: usize> BitOrAssign<[u8; N]> for Bitmap<BYTES> 
     }
 }
 
-impl<const BYTES: usize> BitAnd<u8> for &Bitmap<BYTES> {
-    type Output = u8;
-    fn bitand(self, rhs: u8) -> Self::Output {
-        let arr: [u8; 1] = unsafe { core::mem::transmute(rhs) };
-        let arr = self & arr;
-        unsafe { core::mem::transmute(arr) }
-    }
+macro_rules! impl_bitand {
+    ($t:ty) => {
+        impl<const BYTES: usize> BitAnd<$t> for &Bitmap<BYTES> {
+            type Output = $t;
+            fn bitand(self, rhs: $t) -> Self::Output {
+                const SIZE: usize = core::mem::size_of::<$t>();
+                let arr:[u8; SIZE] = unsafe { core::mem::transmute(rhs) };
+                let res = self & arr;
+                unsafe { core::mem::transmute(res) }
+            }
+        }
+    };
 }
 
-impl<const BYTES: usize> BitAndAssign<u8> for Bitmap<BYTES> {
-    fn bitand_assign(&mut self, rhs: u8) {
-        let arr: [u8; 1] = unsafe { core::mem::transmute(rhs) };
-        *self &= arr;
-    }
+macro_rules! impl_bitand_assign {
+    ($t:ty) => {
+        impl<const BYTES: usize> BitAndAssign<$t> for Bitmap<BYTES> {
+            fn bitand_assign(&mut self, rhs: $t) {
+                const SIZE: usize = core::mem::size_of::<$t>();
+                let arr:[u8; SIZE] = unsafe { core::mem::transmute(rhs) };
+                *self &= arr
+            }
+        }
+    };
 }
 
-impl<const BYTES: usize> BitOrAssign<u8> for Bitmap<BYTES> {
-    fn bitor_assign(&mut self, rhs: u8) {
-        let arr: [u8; 1] = unsafe { core::mem::transmute(rhs) };
-        *self |= arr;
-    }
+macro_rules! impl_bitor_assign {
+    ($t:ty) => {
+        impl<const BYTES: usize> BitOrAssign<$t> for Bitmap<BYTES> {
+            fn bitor_assign(&mut self, rhs: $t) {
+                const SIZE: usize = core::mem::size_of::<$t>();
+                let arr:[u8; SIZE] = unsafe { core::mem::transmute(rhs) };
+                *self |= arr
+            }
+        }
+    };
 }
 
-impl<const BYTES: usize> BitAnd<u16> for &Bitmap<BYTES> {
-    type Output = u16;
-    fn bitand(self, rhs: u16) -> Self::Output {
-        let arr: [u8; 2] = unsafe { core::mem::transmute(rhs) };
-        let arr = self & arr;
-        unsafe { core::mem::transmute(arr) }
-    }
-}
+impl_bitand!(u8);
+impl_bitand!(i8);
+impl_bitand!(char);
+impl_bitand!(u16);
+impl_bitand!(i16);
+impl_bitand!(u32);
+impl_bitand!(i32);
+impl_bitand!(u64);
+impl_bitand!(i64);
+impl_bitand!(u128);
+impl_bitand!(i128);
+impl_bitand!(usize);
+impl_bitand!(isize);
 
-impl<const BYTES: usize> BitAndAssign<u16> for Bitmap<BYTES> {
-    fn bitand_assign(&mut self, rhs: u16) {
-        let arr: [u8; 2] = unsafe { core::mem::transmute(rhs) };
-        *self &= arr;
-    }
-}
+impl_bitand_assign!(u8);
+impl_bitand_assign!(i8);
+impl_bitand_assign!(char);
+impl_bitand_assign!(u16);
+impl_bitand_assign!(i16);
+impl_bitand_assign!(u32);
+impl_bitand_assign!(i32);
+impl_bitand_assign!(u64);
+impl_bitand_assign!(i64);
+impl_bitand_assign!(u128);
+impl_bitand_assign!(i128);
+impl_bitand_assign!(usize);
+impl_bitand_assign!(isize);
 
-impl<const BYTES: usize> BitOrAssign<u16> for Bitmap<BYTES> {
-    fn bitor_assign(&mut self, rhs: u16) {
-        let arr: [u8; 2] = unsafe { core::mem::transmute(rhs) };
-        *self |= arr;
-    }
-}
-
-impl<const BYTES: usize> BitAnd<u32> for &Bitmap<BYTES> {
-    type Output = u32;
-    fn bitand(self, rhs: u32) -> Self::Output {
-        let arr: [u8; 4] = unsafe { core::mem::transmute(rhs) };
-        let arr = self & arr;
-        unsafe { core::mem::transmute(arr) }
-    }
-}
-
-impl<const BYTES: usize> BitAndAssign<u32> for Bitmap<BYTES> {
-    fn bitand_assign(&mut self, rhs: u32) {
-        let arr: [u8; 4] = unsafe { core::mem::transmute(rhs) };
-        *self &= arr;
-    }
-}
-
-impl<const BYTES: usize> BitOrAssign<u32> for Bitmap<BYTES> {
-    fn bitor_assign(&mut self, rhs: u32) {
-        let arr: [u8; 4] = unsafe { core::mem::transmute(rhs) };
-        *self |= arr;
-    }
-}
-
-impl<const BYTES: usize> BitAnd<u64> for &Bitmap<BYTES> {
-    type Output = u64;
-    fn bitand(self, rhs: u64) -> Self::Output {
-        let arr: [u8; 8] = unsafe { core::mem::transmute(rhs) };
-        let arr = self & arr;
-        unsafe { core::mem::transmute(arr) }
-    }
-}
-
-impl<const BYTES: usize> BitAndAssign<u64> for Bitmap<BYTES> {
-    fn bitand_assign(&mut self, rhs: u64) {
-        let arr: [u8; 8] = unsafe { core::mem::transmute(rhs) };
-        *self &= arr;
-    }
-}
-
-impl<const BYTES: usize> BitOrAssign<u64> for Bitmap<BYTES> {
-    fn bitor_assign(&mut self, rhs: u64) {
-        let arr: [u8; 8] = unsafe { core::mem::transmute(rhs) };
-        *self |= arr;
-    }
-}
-
-impl<const BYTES: usize> BitAnd<u128> for &Bitmap<BYTES> {
-    type Output = u128;
-    fn bitand(self, rhs: u128) -> Self::Output {
-        let arr: [u8; 16] = unsafe { core::mem::transmute(rhs) };
-        let arr = self & arr;
-        unsafe { core::mem::transmute(arr) }
-    }
-}
-
-impl<const BYTES: usize> BitAndAssign<u128> for Bitmap<BYTES> {
-    fn bitand_assign(&mut self, rhs: u128) {
-        let arr: [u8; 16] = unsafe { core::mem::transmute(rhs) };
-        *self &= arr;
-    }
-}
-
-impl<const BYTES: usize> BitOrAssign<u128> for Bitmap<BYTES> {
-    fn bitor_assign(&mut self, rhs: u128) {
-        let arr: [u8; 16] = unsafe { core::mem::transmute(rhs) };
-        *self |= arr;
-    }
-}
-
-impl<const BYTES: usize> BitAnd<usize> for &Bitmap<BYTES> {
-    type Output = usize;
-    fn bitand(self, rhs: usize) -> Self::Output {
-        const USIZE: usize = core::mem::size_of::<usize>();
-        let arr: [u8; USIZE] = unsafe { core::mem::transmute(rhs) };
-        let arr = self & arr;
-        unsafe { core::mem::transmute(arr) }
-    }
-}
-
-impl<const BYTES: usize> BitAndAssign<usize> for Bitmap<BYTES> {
-    fn bitand_assign(&mut self, rhs: usize) {
-        const USIZE: usize = core::mem::size_of::<usize>();
-        let arr: [u8; USIZE] = unsafe { core::mem::transmute(rhs) };
-        *self &= arr;
-    }
-}
-
-impl<const BYTES: usize> BitOrAssign<usize> for Bitmap<BYTES> {
-    fn bitor_assign(&mut self, rhs: usize) {
-        const USIZE: usize = core::mem::size_of::<usize>();
-        let arr: [u8; USIZE] = unsafe { core::mem::transmute(rhs) };
-        *self |= arr;
-    }
-}
-
-impl<'map, const BYTES: usize> Deref for BitRef<'map, BYTES> {
-    type Target = bool;
-    fn deref(&self) -> &Self::Target {
-        &self.value
-    }
-}
-
-impl<'map, const BYTES: usize> Deref for BitRefMut<'map, BYTES> {
-    type Target = bool;
-    fn deref(&self) -> &Self::Target {
-        &self.value
-    }
-}
+impl_bitor_assign!(u8);
+impl_bitor_assign!(i8);
+impl_bitor_assign!(char);
+impl_bitor_assign!(u16);
+impl_bitor_assign!(i16);
+impl_bitor_assign!(u32);
+impl_bitor_assign!(i32);
+impl_bitor_assign!(u64);
+impl_bitor_assign!(i64);
+impl_bitor_assign!(u128);
+impl_bitor_assign!(i128);
+impl_bitor_assign!(usize);
+impl_bitor_assign!(isize);

@@ -179,6 +179,30 @@ fn and_or() {
 }
 
 #[test]
+fn test_macro() {
+    let map = newmap!();
+    assert_eq!(map.bit_len(), 0);
+
+    let map = newmap!(;35);
+    assert_eq!(map.bit_len(), 40);
+
+    let map = newmap!(1u8 | 0b100000u128; 48);
+    assert_eq!(map.bit_len(), 48);
+    assert_eq!(map.get_bool(0), true);
+    assert_eq!(map.get_bool(5), true);
+
+    let a = 1u64 << 34;
+    let b = 1u128 << 47;
+    let map = newmap!(a | b; 48);
+    assert_eq!(map.get_bool(34), true);
+    assert_eq!(map.get_bool(47), true);
+
+    let map = he_lang!(1 | 2; 8);
+    assert_eq!(map.get_bool(1), true);
+    assert_eq!(map.get_bool(2), true);
+}
+
+#[test]
 #[should_panic]
 fn at_out_of_range() {
     let _ = Bitmap::<1>::new().at(8);

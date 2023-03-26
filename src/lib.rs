@@ -20,7 +20,17 @@
 //! }
 //! ```
 //! 
+//! You are recommended to use macros to create new bitmaps:
+//! ```
+//! use cbitmap::bitmap::*;
+//! 
+//! let map = newmap!(0b_01; 2);
+//! ```
+//! 
+//! See also [`crate::he_lang`].
+//! 
 //! The bitmap can be manipulated in conventional ways, like 
+//! [`crate::bitmap::Bitmap::bit_len()`], 
 //! [`crate::bitmap::Bitmap::get_bool()`], 
 //! [`crate::bitmap::Bitmap::set()`], 
 //! [`crate::bitmap::Bitmap::reset()`], 

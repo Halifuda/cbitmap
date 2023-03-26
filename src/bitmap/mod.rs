@@ -1,6 +1,9 @@
 pub mod from;
 pub mod ops;
 pub mod fmt;
+pub mod macros;
+
+pub use crate::{newmap, he_lang};
 
 #[derive(Clone)]
 /// A size-fixed bitmap with croase-granularity (byte) and conventional 
@@ -18,7 +21,7 @@ pub mod fmt;
 /// It is allowed to have `BYTES == 0`. In this case, `bits = None`.
 /// 
 /// # Examples
-/// ## Create a new bitmap
+/// ## Create a new bitmap using methods
 /// ```
 /// use cbitmap::bitmap::*;
 /// 
@@ -36,11 +39,37 @@ pub mod fmt;
 /// // specified:
 /// let map: Bitmap<2> = 0b_10000000_00000001.into();
 /// ```
-/// ## Use immutable methods to inspect bits
+/// ## Create a new bitmap using macros (recommend)
+/// ```
+/// use cbitmap::bitmap::*;
+/// 
+/// // Bitmap<0>
+/// let map = newmap!();
+///
+/// // newmap!(;bits) = Bitmap<{(bits + 7) / 8}>
+/// let map = newmap!(;35);
+///
+/// // newmap!(mask:literal | mask:literal | ...; bits)
+/// let map = newmap!(1u8 | 0b100000u128; 48);
+///
+/// // newmap!(var | var | ...; bits)
+/// let a = 1u64 << 34;
+/// let b = 1u128 << 47;
+/// let map = newmap!(a | b; 48);
+///
+/// // he_lang!(idx | idx | ...; bits)
+/// let map = he_lang!(1 | 2; 8);
+/// ```
+/// 
+/// ## Use immutable methods to inspect bits and bitmap infos
 /// ```
 /// use cbitmap::bitmap::*;
 /// 
 /// let map: Bitmap<1> = 0b_10000001.into();
+/// // bit_len() can get the length of the bitmap in bits, 
+/// // while byte_len() get it in bytes:
+/// assert_eq!(map.bit_len(), 8);
+/// assert_eq!(map.byte_len(), 1);
 /// // get_bool() and get_01() can get the value of one bit:
 /// assert_eq!(map.get_bool(0), true);
 /// assert_eq!(map.get_01(7), 1);
@@ -232,6 +261,32 @@ impl<const BYTES: usize> Bitmap<BYTES> {
         }
     }
 
+    /// Get the length of the bitmap in bits.
+    /// 
+    /// # Examples
+    /// ```
+    /// use cbitmap::bitmap::Bitmap;
+    /// 
+    /// let map: Bitmap<3> = Default::default();
+    /// assert_eq!(map.bit_len(), 24);
+    /// ```
+    #[inline]
+    pub fn bit_len(&self) -> usize { BYTES * 8 }
+
+
+    /// Get the length of the bitmap in bytes.
+    /// 
+    /// # Examples
+    /// ```
+    /// use cbitmap::bitmap::Bitmap;
+    /// 
+    /// let map: Bitmap<3> = Default::default();
+    /// assert_eq!(map.byte_len(), 3);
+    /// ```
+    #[inline]
+    pub fn byte_len(&self) -> usize { BYTES }
+
+
     /// Get the value of a bit by sepcifying the index.
     /// 
     /// # Arguments
@@ -257,6 +312,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// 
     /// # Panics
     /// Panic if the `index` is out of range.
+    #[inline]
     pub fn get_bool(&self, index: usize) -> bool {
         self.__get_bool(__idx_get_byte(index), __idx_get_bit(index))
     }
@@ -290,6 +346,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// 
     /// # Panics
     /// Panic if the `index` is out of range.
+    #[inline]
     pub fn get_01(&self, index: usize) -> u8 {
         match self.get_bool(index) {
             true => 1,

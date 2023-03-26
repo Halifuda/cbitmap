@@ -14,8 +14,8 @@ impl<const BYTES: usize> Default for Bitmap<BYTES> {
 // Into
 
 impl<const BYTES: usize> Into<[u8; BYTES]> for Bitmap<BYTES> {
-    /// Give the inner array of bitmap. 
-    /// 
+    /// Give the inner array of bitmap.
+    ///
     /// # See
     /// [`Bitmap`].
     fn into(self) -> [u8; BYTES] {
@@ -28,7 +28,7 @@ impl<const BYTES: usize> Into<[u8; BYTES]> for Bitmap<BYTES> {
 
 impl<'map, const BYTES: usize> Into<bool> for BitRef<'map, BYTES> {
     /// Give the value of the referenced bit.
-    /// 
+    ///
     /// # See
     /// [`BitRef`].
     fn into(self) -> bool {
@@ -68,16 +68,16 @@ fn __copy_bytes<const N: usize, const M: usize>(src: [u8; M]) -> [u8; N] {
 // From
 
 impl<const BYTES: usize, const N: usize> From<[u8; N]> for Bitmap<BYTES> {
-    /// Convert a array `[u8; N]` into `Bitmap<BYTES>`. 
-    /// 
-    /// The generics `N` and `BYTES` has not to be equal. 
-    /// If `N < BYTES`, the bitmap will have `BYTES - N` 
+    /// Convert a array `[u8; N]` into `Bitmap<BYTES>`.
+    ///
+    /// The generics `N` and `BYTES` has not to be equal.
+    /// If `N < BYTES`, the bitmap will have `BYTES - N`
     /// bytes of leading zero.
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use cbitmap::bitmap::Bitmap;
-    /// 
+    ///
     /// let map = Bitmap::<2>::from([0u8; 2]);
     /// ```
     fn from(value: [u8; N]) -> Self {
@@ -90,86 +90,27 @@ impl<const BYTES: usize, const N: usize> From<[u8; N]> for Bitmap<BYTES> {
     }
 }
 
-impl<const BYTES: usize> From<u8> for Bitmap<BYTES> {
-    fn from(int: u8) -> Self {
-        let arr: [u8; 1] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
+macro_rules! impl_from {
+    ($t:ty) => {
+        impl<const BYTES: usize> From<$t> for Bitmap<BYTES> {
+            fn from(value: $t) -> Self {
+                let arr: [u8; core::mem::size_of::<$t>()] = unsafe { core::mem::transmute(value) };
+                Bitmap::<BYTES>::from(arr)
+            }
+        }
+    };
 }
 
-impl<const BYTES: usize> From<u16> for Bitmap<BYTES> {
-    fn from(int: u16) -> Self {
-        let arr: [u8; 2] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
-
-impl<const BYTES: usize> From<u32> for Bitmap<BYTES> {
-    fn from(int: u32) -> Self {
-        let arr: [u8; 4] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
-
-impl<const BYTES: usize> From<u64> for Bitmap<BYTES> {
-    fn from(int: u64) -> Self {
-        let arr: [u8; 8] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
-
-impl<const BYTES: usize> From<u128> for Bitmap<BYTES> {
-    fn from(int: u128) -> Self {
-        let arr: [u8; 16] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
-
-impl<const BYTES: usize> From<usize> for Bitmap<BYTES> {
-    fn from(int: usize) -> Self {
-        let arr: [u8; core::mem::size_of::<usize>()] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
-
-impl<const BYTES: usize> From<i8> for Bitmap<BYTES> {
-    fn from(int: i8) -> Self {
-        let arr: [u8; 1] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
-
-impl<const BYTES: usize> From<i16> for Bitmap<BYTES> {
-    fn from(int: i16) -> Self {
-        let arr: [u8; 2] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
-
-impl<const BYTES: usize> From<i32> for Bitmap<BYTES> {
-    fn from(int: i32) -> Self {
-        let arr: [u8; 4] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
-
-impl<const BYTES: usize> From<i64> for Bitmap<BYTES> {
-    fn from(int: i64) -> Self {
-        let arr: [u8; 8] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
-
-impl<const BYTES: usize> From<i128> for Bitmap<BYTES> {
-    fn from(int: i128) -> Self {
-        let arr: [u8; 16] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
-
-impl<const BYTES: usize> From<isize> for Bitmap<BYTES> {
-    fn from(int: isize) -> Self {
-        let arr: [u8; core::mem::size_of::<isize>()] = unsafe { core::mem::transmute(int) };
-        Bitmap::<BYTES>::from(arr)
-    }
-}
+impl_from!(u8);
+impl_from!(i8);
+impl_from!(char);
+impl_from!(u16);
+impl_from!(i16);
+impl_from!(u32);
+impl_from!(i32);
+impl_from!(u64);
+impl_from!(i64);
+impl_from!(u128);
+impl_from!(i128);
+impl_from!(usize);
+impl_from!(isize);
