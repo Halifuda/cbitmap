@@ -4,11 +4,12 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 
-
+description = "A conventional, compact and core (no_std) bitmap."
 readme = "README.md"
 authors = ["Halifuda"]
 keywords = ["bitmap", "bitset", "bitarray"]
 categories = ["no-std"]
+repository = "https://github.com/Halifuda/cbitmap"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
