@@ -1,6 +1,6 @@
 [package]
 name = "cbitmap"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "MIT"
 
@@ -10,6 +10,7 @@ authors = ["Halifuda"]
 keywords = ["bitmap", "bitset", "bitarray"]
 categories = ["no-std"]
 repository = "https://github.com/Halifuda/cbitmap"
+documentation = "https://docs.rs/cbitmap"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
