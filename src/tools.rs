@@ -40,9 +40,9 @@ pub(super) mod inner_use {
                     core::ptr::write(dstptr, src);
                 }
                 false => {
+                    let dstptr = dst.as_mut_ptr().cast::<[u8; N]>();
                     let srcptr = src.as_ptr().cast::<[u8; N]>();
-                    // let dstptr = &mut dst as *mut [u8; N];
-                    *&mut dst = *srcptr;
+                    core::ptr::write(dstptr, *srcptr);
                 }
             }
         };
@@ -61,8 +61,9 @@ pub(super) mod inner_use {
                     core::ptr::write(dstptr, *src);
                 }
                 false => {
+                    let dstptr = dst.as_mut_ptr().cast::<[u8; N]>();
                     let srcptr = src.as_ptr().cast::<[u8; N]>();
-                    *dst = *srcptr;
+                    core::ptr::write(dstptr, *srcptr);
                 }
             }
         };
