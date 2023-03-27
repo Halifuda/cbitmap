@@ -10,7 +10,9 @@
 ## Use cases
 
  You are recommended to use this crate when you want to
- maintain a bitmap containing a large but fixed number of bits.
+ maintain a bitmap containing a large but fixed number of bits. 
+ Especially, when you are caring memory usage/alignment, for 
+ `cbitmap` wastes almost no places.
 
  For example, you may want to manage a set of resources, which
  can be described by two states, and a bitmap is fit for you.
@@ -18,8 +20,12 @@
  If you want to maintain a small set of flags, like 2 or 3, we
  recommend [flagset](https://crates.io/crates/flagset) instead.
 
+ The most extensive and mature implementation of bitmap might be 
+ [bitvec](https://crates.io/crates/bitvec). You are recommended
+ to use it if you are caring about maturity. 
+
  Also, [bitset-core](https://crates.io/crates/bitset-core) is 
- an earlier yet powerful crate that implemented bitset trait. 
+ another powerful crate that implemented compact bitset trait. 
  However, the implementation between `bitset-core` and `cbitmap` 
  is quiet different. 
  
@@ -139,16 +145,16 @@
 
   A `bitset<N>` in C++ can be indexed by Index op `[]`. We have
   met some problems when implementing this feature. Specifically,
-  implementing `core::ops::Index` for a struct is like this:
+  implementing `core::ops::IndexMut` for a struct is like this:
 
   ```rust
-  impl Index for T {
+  impl IndexMut for T {
       type Output = U;
-      fn index(&self, index: usize) -> &Self::Output { ... }
+      fn index(&mut self, index: usize) -> &mut Self::Output { ... }
   }
   ```
 
-  The ref in `&Self::Output` requires `self` to own the indexed output.
+  The ref in `&mut Self::Output` requires `self` to own the indexed output.
   
   In `Bitmap`, `Output` is required to be "bits".
   It is necessary to use a wrapper type to provide interfaces to
@@ -157,15 +163,21 @@
   
   However, the bitmap is not expected to hold a large set of wrappers,
   in order to save memories.
-  It is not possible either to create the wrapper in `index()` and
-  pass it to the bitmap, since the `&self` is referenced immutably.
   
-  Due to this issue, we only provide `Bitmap::at()`
-  and `Bitmap::at_mut()` as methods
-  to index into the bitmap.
+  Due to this issue, we only provide  `Bitmap::at_mut()` as methods
+  to multably index into the bitmap.
+
+  It is noteworthy that, we provide `Bitmap::at()` to get `BitRef`, and 
+  we also provide immutable `Index`. However, immutable `Index` only 
+  returns a `bool` value, not `BitRef` due to a similar issue.
  
  ## Updates
  
+ - 0.3.2
+ - - Add `Index`.
+ - - Add `as_ref()`, `as_mut()`, `as_ptr()`, `as_mut_ptr()`.
+ - - Wrap general methods like `set()` into a trait.
+
  - 0.3.1
  - - Add basic benchmarks.
  - - Add new methods compatible with C++: `Bitmap::any()`, 

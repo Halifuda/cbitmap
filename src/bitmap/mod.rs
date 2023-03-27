@@ -3,9 +3,9 @@ pub mod from;
 pub mod macros;
 pub mod ops;
 pub mod refs;
+pub mod ptr;
 mod traits;
 
-#[derive(Clone)]
 /// A size-fixed bitmap with croase-granularity (byte) and conventional
 /// interfaces.
 ///
@@ -138,8 +138,153 @@ mod traits;
 /// map &= 1u8 << 7;
 /// assert_eq!(&map & !0u8, 1u8 << 7);
 /// ```
+#[derive(Clone)]
 pub struct Bitmap<const BYTES: usize> {
     bits: [u8; BYTES],
+}
+
+/// A general trait, structs which implemented this 
+/// trait provide interfaces to access a range of bits.
+pub trait BitsManage {
+    fn count(&self) -> usize;
+
+    /// Find the first '1', returns its index.
+    /// # Returns
+    /// [`None`] if there is no '1', [`Some(usize)`] 
+    /// otherwise.
+    fn find_first_one(&self) -> Option<usize>;
+
+    /// Find the first '0', returns its index.
+    /// # Returns
+    /// [`None`] if there is no '0', [`Some(usize)`] 
+    /// otherwise.
+    fn find_first_zero(&self) -> Option<usize>;
+    
+    /// Get the bool value of indexed bit.
+    /// 
+    /// # Panics
+    /// Panic if `index` is out of range.
+    fn get_bool(&self, index: usize) -> bool;
+
+    /// Set the indexed bit to '1'.
+    /// 
+    /// # Panics
+    /// Panic if `index` is out of range.
+    fn set(&mut self, index: usize) -> &mut Self;
+
+    /// Set the indexed bit to '0'.
+    /// 
+    /// # Panics
+    /// Panic if `index` is out of range.
+    fn reset(&mut self, index: usize) -> &mut Self;
+
+    /// Flip the indexed bit.
+    /// 
+    /// # Panics
+    /// Panic if `index` is out of range.
+    fn flip(&mut self, index: usize) -> &mut Self;
+
+    /// Set all bits to '1'.
+    fn set_all(&mut self) -> &mut Self;
+
+    /// Set all bits to '0'.
+    fn reset_all(&mut self) -> &mut Self;
+
+    /// Flip all bits.
+    fn flip_all(&mut self) -> &mut Self;
+
+    // Default implementations
+
+    /// A wrapper of [`Bitmap::find_first_zero()`].
+    ///
+    /// # Return
+    /// [`bool`]. `true` iff there is no '0' in the
+    /// bitmap.
+    ///
+    /// # Examples
+    /// ```
+    /// use cbitmap::bitmap::*;
+    ///
+    /// let mut map = newmap!(0b10;16);
+    /// assert_eq!(map.all(), false);
+    /// map.set_all();
+    /// assert_eq!(map.all(), true);
+    /// ```
+    #[inline]
+    fn all(&self) -> bool {
+      self.find_first_zero().is_none()
+    }
+
+    /// A wrapper of [`Bitmap::find_first_one()`].
+    ///
+    /// # Return
+    /// [`bool`]. `true` iff there is '1' in the bitmap.
+    ///
+    /// # Examples
+    /// ```
+    /// use cbitmap::bitmap::*;
+    ///
+    /// let mut map = newmap!(;16);
+    /// assert_eq!(map.any(), false);
+    /// map.set(10);
+    /// assert_eq!(map.any(), true);
+    /// ```
+    #[inline]
+    fn any(&self) -> bool {
+      self.find_first_one().is_some()
+    }
+
+    /// A wrapper of [`Bitmap::find_first_one()`].
+    ///
+    /// # Return
+    /// [`bool`]. `true` iff there is no '1' in
+    /// the bitmap.
+    ///
+    /// # Examples
+    /// ```
+    /// use cbitmap::bitmap::*;
+    ///
+    /// let mut map = newmap!(;16);
+    /// assert_eq!(map.none(), true);
+    /// map.set(10);
+    /// assert_eq!(map.none(), false);
+    /// ```
+    #[inline]
+    fn none(&self) -> bool {
+      self.find_first_one().is_none()
+    }
+
+    /// Get the value of a bit by sepcifying the index.
+    /// A wrapper of `get_bool()`.
+    ///
+    /// # Arguments
+    /// * `index`: the index of the bit.
+    ///
+    /// # Return
+    /// `0/1`, the exact value of the bit.
+    ///
+    /// # Panics
+    /// Panic if the `index` is out of range.
+    #[inline]
+    fn get_01(&self, index: usize) -> u8 {
+        self.get_bool(index).into()
+    }
+
+    /// Get the value of a bit by sepcifying the index.
+    /// A wrapper of `get_bool()`.
+    ///
+    /// # Arguments
+    /// * `index`: the index of the bit.
+    ///
+    /// # Return
+    /// [`bool`], the value of the bit.
+    ///
+    /// # Panics
+    /// Panic if the `index` is out of range.
+    #[inline]
+    fn test(&self, index: usize) -> bool {
+        self.get_bool(index)
+    }
 }
 
 impl<const BYTES: usize> Bitmap<BYTES> {
@@ -184,7 +329,9 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     pub const fn byte_len(&self) -> usize {
         BYTES
     }
+}
 
+impl<const BYTES: usize> BitsManage for Bitmap<BYTES> {
     /// Get the value of a bit by sepcifying the index.
     ///
     /// # Arguments
@@ -202,42 +349,8 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// # Panics
     /// Panic if the `index` is out of range.
     #[inline]
-    pub fn get_bool(&self, index: usize) -> bool {
+    fn get_bool(&self, index: usize) -> bool {
         self.__get_bool(__idx_get_byte(index), __idx_get_bit(index))
-    }
-
-    /// Get the value of a bit by sepcifying the index.
-    /// A wrapper of `get_bool()`.
-    ///
-    /// # Arguments
-    /// * `index`: the index of the bit.
-    ///
-    /// # Return
-    /// `0/1`, the exact value of the bit.
-    ///
-    /// # Examples
-    /// A simple example:
-    /// ```
-    /// use cbitmap::bitmap::*;
-    ///
-    /// let map = newmap!(0b_1; 8);
-    /// assert_eq!(map.get_01(0), 1);
-    /// ```
-    ///
-    /// # Panics
-    /// Panic if the `index` is out of range.
-    #[inline]
-    pub fn get_01(&self, index: usize) -> u8 {
-        match self.get_bool(index) {
-            true => 1,
-            false => 0,
-        }
-    }
-
-    /// A wrapper of [`Bitmap::get_bool()`].
-    #[inline]
-    pub fn test(&self, index: usize) -> bool {
-      self.get_bool(index)
     }
 
     /// Get the minimal index of a '1' in the bitmap.
@@ -260,7 +373,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// assert_eq!(map.find_first_one(), Some(0));
     /// ```
     #[inline]
-    pub fn find_first_one(&self) -> Option<usize> {
+    fn find_first_one(&self) -> Option<usize> {
         let mut index: usize = 0;
         for b in &self.bits {
             let test = (*b) & (!(*b)).wrapping_add(1);
@@ -310,7 +423,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// assert_eq!(map.find_first_zero(), Some(0));
     /// ```
     #[inline]
-    pub fn find_first_zero(&self) -> Option<usize> {
+    fn find_first_zero(&self) -> Option<usize> {
         let mut index: usize = 0;
         for b in &self.bits {
             let test = (*b).wrapping_add(1) & !(*b);
@@ -339,75 +452,16 @@ impl<const BYTES: usize> Bitmap<BYTES> {
         }
     }
 
-    /// A wrapper of [`Bitmap::find_first_one()`].
-    ///
-    /// # Return
-    /// [`bool`]. `true` iff there is '1' in the bitmap.
-    ///
-    /// # Examples
-    /// ```
-    /// use cbitmap::bitmap::*;
-    ///
-    /// let mut map = newmap!(;16);
-    /// assert_eq!(map.any(), false);
-    /// map.set(10);
-    /// assert_eq!(map.any(), true);
-    /// ```
-    #[inline]
-    pub fn any(&self) -> bool {
-        self.find_first_one().is_some()
-    }
-
-    /// A wrapper of [`Bitmap::find_first_one()`].
-    ///
-    /// # Return
-    /// [`bool`]. `true` iff there is no '1' in
-    /// the bitmap.
-    ///
-    /// # Examples
-    /// ```
-    /// use cbitmap::bitmap::*;
-    ///
-    /// let mut map = newmap!(;16);
-    /// assert_eq!(map.none(), true);
-    /// map.set(10);
-    /// assert_eq!(map.none(), false);
-    /// ```
-    #[inline]
-    pub fn none(&self) -> bool {
-        self.find_first_one().is_none()
-    }
-
-    /// A wrapper of [`Bitmap::find_first_zero()`].
-    ///
-    /// # Return
-    /// [`bool`]. `true` iff there is no '0' in the
-    /// bitmap.
-    ///
-    /// # Examples
-    /// ```
-    /// use cbitmap::bitmap::*;
-    ///
-    /// let mut map = newmap!(0b10;16);
-    /// assert_eq!(map.all(), false);
-    /// map.set_all();
-    /// assert_eq!(map.all(), true);
-    /// ```
-    #[inline]
-    pub fn all(&self) -> bool {
-        self.find_first_zero().is_none()
-    }
-
     /// Count how many '1's are in the bitmap.
-    /// 
+    ///
     /// # Examples
     /// ```
     /// use cbitmap::bitmap::*;
-    /// 
+    ///
     /// let mut map = newmap!(;64);
     /// assert_eq!(map.count(), 0);
     /// let some = [
-    ///     0b11, 0b110, 0b101, 0b1010, 
+    ///     0b11, 0b110, 0b101, 0b1010,
     ///     0b1111, 0b1, 0b10000, 0b01];
     /// map.fill_prefix(some);
     /// assert_eq!(map.count(), 15);
@@ -415,9 +469,9 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// assert_eq!(map.count(), 49);
     /// map.set_all();
     /// assert_eq!(map.count(), 64);
-    /// ``` 
+    /// ```
     #[inline]
-    pub fn count(&self) -> usize {
+    fn count(&self) -> usize {
         let mut cnt: usize = 0;
         for b in &self.bits {
             let mut temp = *b;
@@ -446,7 +500,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// map.set(1).set(2).set(3);
     /// assert_eq!(&map.range_to_string(0, 8).unwrap(), "00001111");
     /// ```
-    pub fn set(&mut self, index: usize) -> &mut Self {
+    fn set(&mut self, index: usize) -> &mut Self {
         if __out_bound(BYTES, index) {
             panic!("Bitmap: setting out of range");
         }
@@ -473,7 +527,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// map.reset(1).reset(2).reset(3);
     /// assert_eq!(&map.range_to_string(0, 8).unwrap(), "11110000");
     /// ```
-    pub fn reset(&mut self, index: usize) -> &mut Self {
+    fn reset(&mut self, index: usize) -> &mut Self {
         if __out_bound(BYTES, index) {
             panic!("Bitmap: resetting out of range");
         }
@@ -500,7 +554,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// map.flip(1).flip(0);
     /// assert_eq!(&map.range_to_string(0, 8).unwrap(), "00000010");
     /// ```
-    pub fn flip(&mut self, index: usize) -> &mut Self {
+    fn flip(&mut self, index: usize) -> &mut Self {
         if __out_bound(BYTES, index) {
             panic!("Bitmap: flipping out of range");
         }
@@ -523,7 +577,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// map.set_all().flip(1);
     /// assert_eq!(&map.range_to_string(0, 8).unwrap(), "11111101");
     /// ```
-    pub fn set_all(&mut self) -> &mut Self {
+    fn set_all(&mut self) -> &mut Self {
         *&mut self.bits = [255; BYTES];
         self
     }
@@ -542,7 +596,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// map.reset_all().flip(1);
     /// assert_eq!(&map.range_to_string(0, 8).unwrap(), "00000010");
     /// ```
-    pub fn reset_all(&mut self) -> &mut Self {
+    fn reset_all(&mut self) -> &mut Self {
         *&mut self.bits = [0; BYTES];
         self
     }
@@ -564,7 +618,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// map.flip_all().set(0);
     /// assert_eq!(&map.range_to_string(0, 8).unwrap(), "10101011");
     /// ```
-    pub fn flip_all(&mut self) -> &mut Self {
+    fn flip_all(&mut self) -> &mut Self {
         let arr = &mut self.bits;
         for i in arr {
             *i = !*i;

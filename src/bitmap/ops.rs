@@ -4,7 +4,30 @@
 //! Also including [`Deref`] of `BitRef` and `BitRefMut`.
 
 use super::{*, refs::*};
-use core::ops::{BitAnd, BitAndAssign, BitOrAssign, Deref};
+use core::ops::{BitAnd, BitAndAssign, BitOrAssign, Deref, Index};
+
+impl<const BYTES: usize> Index<usize> for Bitmap<BYTES> {
+  type Output = bool;
+  /// Immutably index into a bit's bool value.
+  /// 
+  /// > Inspired by [`bitvec`](https://docs.rs/bitvec).
+  /// 
+  /// # Examples
+  /// ```
+  /// use cbitmap::bitmap::*;
+  /// 
+  /// let map = newmap!(0b_10000001;8);
+  /// assert_eq!(map[0], true);
+  /// assert_eq!(map[4], false);
+  /// assert_eq!(map[7], true);
+  /// ```
+  fn index(&self, index: usize) -> &Self::Output {
+      match self.test(index) {
+        true => &true,
+        false => &false,
+      }
+  }
+}
 
 impl<'map, const BYTES: usize> Deref for BitRef<'map, BYTES> {
     type Target = bool;

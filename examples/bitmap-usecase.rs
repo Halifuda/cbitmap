@@ -56,7 +56,6 @@ impl<'a> CachelineManager<'a> {
             *mapptr = newmap!(0b1; 64);
             mapptr.as_ref().unwrap()
         };
-        println!("new {}", bitmap.find_first_zero().unwrap());
         Self {
             _bitmap: bitmap,
             page,

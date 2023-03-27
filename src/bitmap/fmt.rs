@@ -16,7 +16,7 @@ impl<const BYTES: usize> core::fmt::Display for Bitmap<BYTES> {
     /// 
     /// # Examples
     /// ```
-    /// use cbitmap::bitmap::Bitmap;
+    /// use cbitmap::bitmap::*;
     /// 
     /// let mut map: Bitmap<3> = 0.into();
     /// map.set(0);
@@ -75,7 +75,7 @@ impl<const BYTES: usize> Bitmap<BYTES> {
     /// 
     /// # Examples
     /// ```
-    /// use cbitmap::bitmap::Bitmap;
+    /// use cbitmap::bitmap::*;
     /// 
     /// let map: Bitmap<2> = 0b_011_11001100.into();
     /// let string = map.range_to_string(2, 11).unwrap();

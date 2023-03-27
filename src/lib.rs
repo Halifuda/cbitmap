@@ -6,6 +6,8 @@
 //! 
 //! You are recommended to use this crate when you want to 
 //! maintain a bitmap containing a large but fixed number of bits. 
+//! Especially, when you are caring memory usage/alignment, for 
+//! `cbitmap` wastes almost no places.
 //! 
 //! For example, you may want to manage a set of resources, which 
 //! can be described by two states, and a bitmap is fit for you. 
@@ -13,6 +15,10 @@
 //! If you want to maintain a small set of flags, like 2 or 3, we
 //! recommend [flagset](https://crates.io/crates/flagset) instead.
 //! 
+//! The most extensive and mature implementation of bitmap might be 
+//! [bitvec](https://crates.io/crates/bitvec). You are recommended
+//！ to use it if you are caring about maturity. 
+//!
 //! Also, [bitset-core](https://crates.io/crates/bitset-core) is 
 //! an earlier yet powerful crate that implemented bitset trait. 
 //! However, the implementation between `bitset-core` and `cbitmap` 
@@ -43,10 +49,10 @@
 //! See also [`crate::he_lang`].
 //! 
 //! The bitmap can be manipulated in conventional ways, like 
-//! [`crate::bitmap::Bitmap::test()`], 
-//! [`crate::bitmap::Bitmap::set()`], 
-//! [`crate::bitmap::Bitmap::reset()`], 
-//! [`crate::bitmap::Bitmap::flip()`] and 
+//! [`crate::bitmap::BitsManage::test()`], 
+//! [`crate::bitmap::BitsManage::set()`], 
+//! [`crate::bitmap::BitsManage::reset()`], 
+//! [`crate::bitmap::BitsManage::flip()`] and 
 //! [`crate::bitmap::Bitmap::at()`]. 
 //! 
 //! The bitmap is actually a wrapper of [`u8`] array `[u8; BYTES]`.
@@ -132,30 +138,32 @@
 //! 
 //! A `bitset<N>` in C++ can be indexed by Index op `[]`. We have 
 //! met some problems when implementing this feature. Specifically, 
-//! implementing [`core::ops::Index`] for a struct is like this:
+//! implementing [`core::ops::IndexMut`] for a struct is like this:
 //! 
 //! ```ignore
-//! impl Index for T {
+//! impl IndexMut for T {
 //!     type Output = U;
-//!     fn index(&self, index: usize) -> &Self::Output { ... }
+//!     fn index(&mut self, index: usize) -> &mut Self::Output { ... }
 //! }
 //! ```
 //! 
-//! The ref in `&Self::Output` requires `self` to own the indexed output. 
+//! The ref in `&mut Self::Output` requires `self` to own the indexed output. 
 //! 
 //! In [`crate::bitmap::Bitmap`], `Output` is required to be "bits". 
 //! It is necessary to use a wrapper type to provide interfaces to 
 //! access a single bits. We have provided [`crate::bitmap::BitRef`] and 
 //! [`crate::bitmap::BitRefMut`] as the wrappers. 
 //! 
-//! However, the bitmap is not expected to hold a large set of wrappers, 
-//! in order to save memories. 
-//! It is not possible either to create the wrapper in `index()` and 
-//! pass it to the bitmap, since the `&self` is referenced immutably.
-//! 
-//! Due to this issue, we only provide [`crate::bitmap::Bitmap::at()`] 
-//! and [`crate::bitmap::Bitmap::at_mut()`] as methods
-//! to index into the bitmap.
+//! However, the bitmap is not expected to hold a large set of wrappers,
+//! in order to save memories.
+//!  
+//! Due to this issue, we only provide  [`crate::bitmap::Bitmap::at_mut()`] 
+//! as methods to multably index into the bitmap.
+//!
+//! It is noteworthy that, we provide [`crate::bitmap::Bitmap::at()`] to get 
+//! [`crate::bitmap::BitRef`], and we also provide immutable [`core::ops::Index`]. 
+//! However, immutable [`core::ops::Index`] only returns a `bool` value, 
+//! not `BitRef` due to a similar issue.
 #![no_std]
 
 extern crate alloc;
