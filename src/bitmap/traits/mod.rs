@@ -21,8 +21,8 @@ impl<const BYTES: usize, const N: usize> FillPrefix<[u8; N]> for Bitmap<BYTES> {
     /// 
     /// let mut map = newmap!(;16);
     /// map.fill_prefix([0b_1010u8; 1]);
-    /// assert_eq!(map.get_bool(1), true);
-    /// assert_eq!(map.get_bool(3), true);
+    /// assert_eq!(map.test(1), true);
+    /// assert_eq!(map.test(3), true);
     /// ```
     /// Here are some aliases:
     /// ```
@@ -31,15 +31,15 @@ impl<const BYTES: usize, const N: usize> FillPrefix<[u8; N]> for Bitmap<BYTES> {
     /// let mut map = newmap!(;128);
     /// // aliases
     /// map.fill_prefix(1u8 << 7);
-    /// assert_eq!(map.get_bool(7), true);
+    /// assert_eq!(map.test(7), true);
     /// map.fill_prefix(1u16 << 15);
-    /// assert_eq!(map.get_bool(15), true);
+    /// assert_eq!(map.test(15), true);
     /// // ... 
     /// map.fill_prefix(1i128 << 100);
-    /// assert_eq!(map.get_bool(100), true);
+    /// assert_eq!(map.test(100), true);
     /// ```
     fn fill_prefix(&mut self, mut value: [u8; N]) -> &mut Self {
-        from::__copy_bytes_to(&mut self.bits, &mut value);
+        __copy_bytes_to(&mut self.bits, &mut value);
         self
     }
 }
@@ -54,7 +54,7 @@ macro_rules! impl_fill_prefix {
                 const SIZE: usize = core::mem::size_of::<$t>();
                 unsafe {
                     let ptr = (&mut value as *mut $t).cast::<[u8; SIZE]>();
-                    from::__copy_bytes_to(&mut self.bits, &mut *ptr);
+                    __copy_bytes_to(&mut self.bits, &mut *ptr);
                 };
                 self
             }

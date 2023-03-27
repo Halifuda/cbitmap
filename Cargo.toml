@@ -24,6 +24,8 @@ criterion = { version = "0.4", features = ["html_reports"] }
 
 [[example]]
 name = "bitmap-base"
+[[example]]
+name = "bitmap-usecase"
 
 [[test]]
 name = "bitmap-base"

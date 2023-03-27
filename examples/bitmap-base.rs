@@ -8,7 +8,7 @@ fn main() {
     bitmap.set(3);
     println!("Set at 3: \n{:#?}", bitmap);
     println!("Format: {}\n", bitmap);
-    println!("Get bool at 2: {}", bitmap.get_bool(2));
+    println!("Get bool at 2: {}", bitmap.test(2));
     bitmap.set(20);
     println!("Set 20. Get 0/1 at 20: {}\n", &bitmap.get_01(20));
     println!("[7..21]: {}", bitmap.range_to_string(7, 21).unwrap());
@@ -25,7 +25,7 @@ fn main() {
         println!("Use set, deref: {}", *bitm);
     }
 
-    println!("After drop, test 5: {}\n", &bitmap.get_bool(5));
+    println!("After drop, test 5: {}\n", &bitmap.test(5));
 
     bitmap.reset_all();
 

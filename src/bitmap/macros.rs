@@ -27,8 +27,8 @@
 /// ```
 /// use cbitmap::bitmap::*;
 /// let map = newmap!(1u8 | 0b100000u128; 8);
-/// assert_eq!(map.get_bool(0), true);
-/// assert_eq!(map.get_bool(5), true);
+/// assert_eq!(map.test(0), true);
+/// assert_eq!(map.test(5), true);
 /// ```
 /// You can also use variables, but you cannot use exprs:
 /// ```
@@ -36,13 +36,13 @@
 /// let a = 1u64 << 34;
 /// let b = 1u128 << 47;
 /// let map = newmap!(a | b; 48);
-/// assert_eq!(map.get_bool(34), true);
-/// assert_eq!(map.get_bool(47), true);
+/// assert_eq!(map.test(34), true);
+/// assert_eq!(map.test(47), true);
 /// // Not allowed!
 /// // let map = newmap!((1 << 12) | (1 << 13); 14);
 /// ```
 /// # See also
-/// [`he_lang`]
+/// [`crate::he_lang`]
 #[macro_export]
 macro_rules! newmap {
     () => {
@@ -96,8 +96,8 @@ macro_rules! newmap {
 /// use cbitmap::bitmap::*;
 /// let map = he_lang!(1 | 4; 5);
 /// assert_eq!(map.bit_len(), 8);
-/// assert_eq!(map.get_bool(1), true);
-/// assert_eq!(map.get_bool(4), true);
+/// assert_eq!(map.test(1), true);
+/// assert_eq!(map.test(4), true);
 /// ```
 /// 
 #[macro_export]

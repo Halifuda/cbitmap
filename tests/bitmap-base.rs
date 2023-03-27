@@ -4,6 +4,37 @@ mod base {
     use cbitmap::bitmap::*;
 
     #[test]
+    fn advanced_op() {
+        let mut map = newmap!(;16);
+        assert_eq!(map.find_first_one(), None);
+        map.set(10);
+        assert_eq!(map.find_first_one(), Some(10));
+        map.set(7);
+        assert_eq!(map.find_first_one(), Some(7));
+        map.set(0);
+        assert_eq!(map.find_first_one(), Some(0));
+
+        map.set_all();
+        assert_eq!(map.find_first_zero(), None);
+        map.reset(10);
+        assert_eq!(map.find_first_zero(), Some(10));
+        map.reset(7);
+        assert_eq!(map.find_first_zero(), Some(7));
+        map.reset(0);
+        assert_eq!(map.find_first_zero(), Some(0));
+
+        let mut map = newmap!(;64);
+        assert_eq!(map.count(), 0);
+        let some = [0b11, 0b110, 0b101, 0b1010, 0b1111, 0b1, 0b10000, 0b01];
+        map.fill_prefix(some);
+        assert_eq!(map.count(), 15);
+        map.flip_all();
+        assert_eq!(map.count(), 49);
+        map.set_all();
+        assert_eq!(map.count(), 64);
+    }
+
+    #[test]
     fn base_op() {
         let mut bitmap: Bitmap<2> = Default::default();
 

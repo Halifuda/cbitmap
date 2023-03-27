@@ -44,42 +44,6 @@ impl<'map, const BYTES: usize> Into<bool> for BitRefMut<'map, BYTES> {
         self.value
     }
 }
-
-// Tool for From
-
-pub(super) fn __copy_bytes<const N: usize, const M: usize>(src: [u8; M]) -> [u8; N] {
-    let mut dst = [0u8; N];
-    unsafe {
-        match N > M {
-            true => {
-                let dstptr = dst.as_mut_ptr().cast::<[u8; M]>();
-                core::ptr::write(dstptr, src);
-            }
-            false => {
-                let srcptr = src.as_ptr().cast::<[u8; N]>();
-                // let dstptr = &mut dst as *mut [u8; N];
-                *&mut dst = *srcptr;
-            }
-        }
-    };
-    dst
-}
-
-pub(super) fn __copy_bytes_to<const N: usize, const M: usize>(dst: &mut [u8; N], src: &mut [u8; M]) {
-    unsafe {
-        match N > M {
-            true => {
-                let dstptr = dst.as_mut_ptr().cast::<[u8; M]>();
-                core::ptr::write(dstptr, *src);
-            }
-            false => {
-                let srcptr = src.as_ptr().cast::<[u8; N]>();
-                *dst = *srcptr;
-            }
-        }
-    };
-}
-
 // From
 
 impl<const BYTES: usize, const N: usize> From<[u8; N]> for Bitmap<BYTES> {

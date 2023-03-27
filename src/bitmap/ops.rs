@@ -3,7 +3,7 @@
 //! 
 //! Also including [`Deref`] of `BitRef` and `BitRefMut`.
 
-use crate::bitmap::*;
+use super::{*, refs::*};
 use core::ops::{BitAnd, BitAndAssign, BitOrAssign, Deref};
 
 impl<'map, const BYTES: usize> Deref for BitRef<'map, BYTES> {
@@ -84,7 +84,7 @@ impl<const BYTES: usize, const N: usize> BitAndAssign<[u8; N]> for Bitmap<BYTES>
     ///
     /// let mut map = Bitmap::<1>::from([0b_11111111_u8; 1]);
     /// map &= [0b_11111110_u8; 1];
-    /// assert_eq!(map.get_bool(0), false);
+    /// assert_eq!(map.test(0), false);
     /// ```
     /// 
     /// There are also aliases for integer types:
@@ -93,7 +93,7 @@ impl<const BYTES: usize, const N: usize> BitAndAssign<[u8; N]> for Bitmap<BYTES>
     /// 
     /// let mut map = Bitmap::<1>::from(255u8);
     /// map &= 0b_11111110u8;
-    /// assert_eq!(map.get_bool(0), false);
+    /// assert_eq!(map.test(0), false);
     /// ```
     ///
     /// It is also noteworthy that, if the bitmap is longer than the array,
@@ -133,7 +133,7 @@ impl<const BYTES: usize, const N: usize> BitOrAssign<[u8; N]> for Bitmap<BYTES> 
     ///
     /// let mut map = Bitmap::<1>::from([0u8; 1]);
     /// map |= [0b_00000001_u8; 1];
-    /// assert_eq!(map.get_bool(0), true);
+    /// assert_eq!(map.test(0), true);
     /// ```
     /// 
     /// There are also aliases for integer types:
@@ -142,7 +142,7 @@ impl<const BYTES: usize, const N: usize> BitOrAssign<[u8; N]> for Bitmap<BYTES> 
     ///
     /// let mut map = Bitmap::<1>::from(0u8);
     /// map |= 0b_00000001_u8;
-    /// assert_eq!(map.get_bool(0), true);
+    /// assert_eq!(map.test(0), true);
     /// ```
     fn bitor_assign(&mut self, rhs: [u8; N]) {
         let size = N.min(BYTES);

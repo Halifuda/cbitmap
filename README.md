@@ -17,10 +17,19 @@
 
  If you want to maintain a small set of flags, like 2 or 3, we
  recommend [flagset](https://crates.io/crates/flagset) instead.
+
+ Also, [bitset-core](https://crates.io/crates/bitset-core) is 
+ an earlier yet powerful crate that implemented bitset trait. 
+ However, the implementation between `bitset-core` and `cbitmap` 
+ is quiet different. 
+ 
+ What's more, the performance of `cbitmap` has not been tested 
+ since it's on alpha version. If you care most about performance, 
+ please make a careful consideration before choice.
   
 ## Features
 
- We provided a `crate::bitmap::Bitmap` type:
+ We have provided a `crate::bitmap::Bitmap` type:
 
  ```rust
  pub struct Bitmap<const BYTES: usize> {
@@ -39,26 +48,57 @@
  See also `crate::he_lang`.
 
   The bitmap can be manipulated in conventional ways, like
-  `crate::bitmap::Bitmap::get_bool()`,
-  `crate::bitmap::Bitmap::set()`,
-  `crate::bitmap::Bitmap::reset()`,
-  `crate::bitmap::Bitmap::flip()` and
-  `crate::bitmap::Bitmap::at()`.
+  `Bitmap::test()`,
+  `Bitmap::set()`,
+  `Bitmap::reset()`,
+  `Bitmap::flip()` and
+  `Bitmap::at()`.
+  Please see the [documentation](https://docs.rs/cbitmap) for 
+  detailed examples.
   
   The bitmap is actually a wrapper of `u8` array `[u8; BYTES]`.
-  It can be put on diverse places on memory.
-  
-  For example, if the map is relatively small like 8 or 16 bits,
+  It can be put on diverse places on memory. For example, if 
+  the map is relatively small like 8 or 16 bits,
   you can put it on stack safely. If it is larger like 256 or
   1024 bits, you may want to put it on heap.
   
 ## Examples
 
-  Please see the documentation of `crate::bitmap::Bitmap` and
-  the examples dir.
+  Here is a simple example:
+
+  ```rust
+  use cbitmap::bitmap::*;
+   
+  // A macro are provided to create a bitmap.
+  let mut map = newmap!(;16);
+  
+  // There is a set of methods to manipulate the bitmap:
+  map.set(10);
+  map.reset(10);
+  map.flip(10);
+  
+  // Some C++ like methods are provided:
+  assert_eq!(map.test(10), true);
+  assert_eq!(map.any(), true);
+  assert_eq!(map.none(), false);
+  
+  // Also provide other useful methods:
+  assert_eq!(map.find_first_one(), 10);
+ 
+  // You can access a single bit using wrappers:
+  let mut bit = map.at_mut(10);
+  assert_eq!(*bit, true);
+  bit.flip();
+  assert_eq!(*map.at(10), false);
+  ```
+
+  Please see the documentation of `Bitmap` and
+  the examples dir for detailed examples.
   
   You can use `cargo run --example <name>` to run the examples we
-  provide.
+  provide. A simple example is `bitmap-base`, another extensive 
+  example about practical usage is `bitmap-usecase`, where bitmap 
+  is used to manage raw memory resources.
   
 ## Current constraints
 
@@ -78,12 +118,27 @@
   }
   ```
 
-  and we failed to find a way to workaround this problem.
+  We have provided an alternative way to let you specify the size
+  in bits. The macro `crate::newmap` achieves this:
+
+  ```rust
+  const BITS: usize = 16;
+  let map = newmap!(;BITS);
+  let another = newmap!(;BITS * 2);
+  ```
+
+  In principle, it is nevertheless possible to use constexpr when 
+  instantiating a struct:
+
+  ```rust
+  // allowed:
+  let map = Bitmap::<{64 / 8}>::new();
+  ```
   
 ### Index
 
   A `bitset<N>` in C++ can be indexed by Index op `[]`. We have
-  meet some problems when implementing this feature. Specifically,
+  met some problems when implementing this feature. Specifically,
   implementing `core::ops::Index` for a struct is like this:
 
   ```rust
@@ -95,16 +150,43 @@
 
   The ref in `&Self::Output` requires `self` to own the indexed output.
   
-  In `crate::bitmap::Bitmap`, `Output` is required to be "bits".
+  In `Bitmap`, `Output` is required to be "bits".
   It is necessary to use a wrapper type to provide interfaces to
-  access a single bits. We provided `crate::bitmap::BitRef` and
-  `crate::bitmap::BitRefMut` as the wrappers.
+  access a single bits. We have provided `BitRef` and
+  `BitRefMut` as the wrappers.
   
-  However, the bitmap is not expected to hold a large set of wrappers
+  However, the bitmap is not expected to hold a large set of wrappers,
   in order to save memories.
   It is not possible either to create the wrapper in `index()` and
-  pass it to the bitmap, since the `self` is referenced immutably.
+  pass it to the bitmap, since the `&self` is referenced immutably.
   
-  Due to this issue, we only provide `crate::bitmap::Bitmap::at()`
-  and `crate::bitmap::Bitmap::at_mut()` as methods
+  Due to this issue, we only provide `Bitmap::at()`
+  and `Bitmap::at_mut()` as methods
   to index into the bitmap.
+ 
+ ## Updates
+ 
+ - 0.3.1
+ - - Add basic benchmarks.
+ - - Add new methods compatible with C++: `Bitmap::any()`, 
+ `Bitmap::none()`, `Bitmap::all()`, 
+ `Bitmap::count()` and `Bitmap::test()`.
+ - - Add useful methods: [`Bitmap::find_first_one()`], 
+ [`Bitmap::find_first_zero()`].
+ - - Add an example `bitmap-usecase`, showing a use case of managing raw
+ memory resources with bitmap.
+ 
+ - 0.3.0
+ - - Optimize memory usage by removing the `Option` (the size of bitmap 
+ is 1 byte bigger than the generic, which is not friendly to memory align).
+ - - Add new method: FillPrefix.
+ - - Improve creating macros: now length argument receive const exprs.
+ 
+ - 0.2.0
+ - - Add building macros.
+ 
+ - 0.1.1
+ - - Update docs.
+ 
+ - 0.1.0 
+ - - First publish.
