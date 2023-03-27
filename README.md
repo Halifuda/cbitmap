@@ -1,3 +1,4 @@
+[![Build Status](https://github.com/Halifuda/cbitmap/workflows/Rust/badge.svg)](https://github.com/Halifuda/cbitmap/actions)
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Crate](https://img.shields.io/crates/v/cbitmap.svg)](https://crates.io/crates/cbitmap)
 [![Doc](https://docs.rs/cbitmap/badge.svg)](https://docs.rs/cbitmap)
@@ -23,7 +24,7 @@
 
  ```rust
  pub struct Bitmap<const BYTES: usize> {
-     bits: Option<[u8; BYTES]>,
+     bits: [u8; BYTES],
  }
  ```
   

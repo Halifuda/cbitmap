@@ -33,14 +33,21 @@ impl<const BYTES: usize, const N: usize> BitAnd<[u8; N]> for &Bitmap<BYTES> {
     /// A `&` can AND the bitmap with a fixed-length [`u8`] array, the results
     /// will be store in a new array:
     /// ```
-    /// use cbitmap::bitmap::Bitmap;
+    /// use cbitmap::bitmap::*;
     ///
-    /// let mut map: Bitmap::<2> = [255u8; 2].into();
+    /// let mut map = Bitmap::<2>::from([255u8; 2]);
     /// let arr = [1u8; 2];
     /// // NOTE: the bitmap shoule be in ref, and should be in left.
     /// assert_eq!(&map & arr, [1u8; 2]);
     /// ```
+    /// There are also aliases for integer types:
+    /// ```
+    /// use cbitmap::bitmap::*;
     /// 
+    /// let mut map = Bitmap::<1>::from(255u8);
+    /// let arr = 1u8;
+    /// assert_eq!(&map & arr, 1u8);
+    /// ```
     /// # See
     /// About the asymmetry between `BYTES` and `N`, see
     /// `bitmap::Bitmap<BYTES>::bitand_assign`.
@@ -73,22 +80,26 @@ impl<const BYTES: usize, const N: usize> BitAndAssign<[u8; N]> for Bitmap<BYTES>
     /// # Examples
     /// A simple example:
     /// ```
-    /// use cbitmap::bitmap::Bitmap;
+    /// use cbitmap::bitmap::*;
     ///
-    /// let mut map: Bitmap::<1> = [0b_11111111_u8; 1].into();
+    /// let mut map = Bitmap::<1>::from([0b_11111111_u8; 1]);
     /// map &= [0b_11111110_u8; 1];
     /// assert_eq!(map.get_bool(0), false);
     /// ```
     /// 
-    /// The **override** of AND a bitmap with fixed-size-unsigned integer is
-    /// provided. 
-    /// For example, [`u8`], [`u16`] or even [`u128`] can be AND to
-    /// a bitmap.
+    /// There are also aliases for integer types:
+    /// ```
+    /// use cbitmap::bitmap::*;
+    /// 
+    /// let mut map = Bitmap::<1>::from(255u8);
+    /// map &= 0b_11111110u8;
+    /// assert_eq!(map.get_bool(0), false);
+    /// ```
     ///
     /// It is also noteworthy that, if the bitmap is longer than the array,
     /// then the rest of bitmap will be set to all-zero.
     /// ```
-    /// use cbitmap::bitmap::Bitmap;
+    /// use cbitmap::bitmap::*;
     ///
     /// let mut map: Bitmap::<2> = [255u8; 2].into();
     /// map &= 255u8;
@@ -118,21 +129,18 @@ impl<const BYTES: usize, const N: usize> BitOrAssign<[u8; N]> for Bitmap<BYTES> 
     /// # Examples
     /// A simple example:
     /// ```
-    /// use cbitmap::bitmap::Bitmap;
+    /// use cbitmap::bitmap::*;
     ///
-    /// let mut map: Bitmap::<1> = [0u8; 1].into();
+    /// let mut map = Bitmap::<1>::from([0u8; 1]);
     /// map |= [0b_00000001_u8; 1];
     /// assert_eq!(map.get_bool(0), true);
     /// ```
     /// 
-    /// The **override** of OR a bitmap with fixed-size-unsigned integer is
-    /// provided. 
-    /// For example, [`u8`], [`u16`] or even [`u128`] can be AND to
-    /// a bitmap.
+    /// There are also aliases for integer types:
     /// ```
-    /// use cbitmap::bitmap::Bitmap;
+    /// use cbitmap::bitmap::*;
     ///
-    /// let mut map: Bitmap::<1> = [0u8; 1].into();
+    /// let mut map = Bitmap::<1>::from(0u8);
     /// map |= 0b_00000001_u8;
     /// assert_eq!(map.get_bool(0), true);
     /// ```

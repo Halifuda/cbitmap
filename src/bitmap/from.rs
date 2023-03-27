@@ -21,7 +21,7 @@ impl<const BYTES: usize> Into<[u8; BYTES]> for Bitmap<BYTES> {
     fn into(self) -> [u8; BYTES] {
         match BYTES == 0 {
             true => [0; BYTES],
-            false => self.bits.unwrap(),
+            false => self.bits,
         }
     }
 }
@@ -47,7 +47,7 @@ impl<'map, const BYTES: usize> Into<bool> for BitRefMut<'map, BYTES> {
 
 // Tool for From
 
-fn __copy_bytes<const N: usize, const M: usize>(src: [u8; M]) -> [u8; N] {
+pub(super) fn __copy_bytes<const N: usize, const M: usize>(src: [u8; M]) -> [u8; N] {
     let mut dst = [0u8; N];
     unsafe {
         match N > M {
@@ -57,12 +57,27 @@ fn __copy_bytes<const N: usize, const M: usize>(src: [u8; M]) -> [u8; N] {
             }
             false => {
                 let srcptr = src.as_ptr().cast::<[u8; N]>();
-                let dstptr = &mut dst as *mut [u8; N];
-                *dstptr = *srcptr;
+                // let dstptr = &mut dst as *mut [u8; N];
+                *&mut dst = *srcptr;
             }
         }
     };
     dst
+}
+
+pub(super) fn __copy_bytes_to<const N: usize, const M: usize>(dst: &mut [u8; N], src: &mut [u8; M]) {
+    unsafe {
+        match N > M {
+            true => {
+                let dstptr = dst.as_mut_ptr().cast::<[u8; M]>();
+                core::ptr::write(dstptr, *src);
+            }
+            false => {
+                let srcptr = src.as_ptr().cast::<[u8; N]>();
+                *dst = *srcptr;
+            }
+        }
+    };
 }
 
 // From
@@ -76,15 +91,22 @@ impl<const BYTES: usize, const N: usize> From<[u8; N]> for Bitmap<BYTES> {
     ///
     /// # Examples
     /// ```
-    /// use cbitmap::bitmap::Bitmap;
+    /// use cbitmap::bitmap::*;
     ///
     /// let map = Bitmap::<2>::from([0u8; 2]);
+    /// ```
+    /// 
+    /// There are also aliases for integer types:
+    /// ```
+    /// use cbitmap::bitmap::*;
+    /// 
+    /// let map = Bitmap::<1>::from(0u8);
     /// ```
     fn from(value: [u8; N]) -> Self {
         match BYTES == 0 {
             true => Bitmap::<BYTES>::new(),
             false => Bitmap {
-                bits: Some(__copy_bytes(value)),
+                bits: __copy_bytes(value),
             },
         }
     }

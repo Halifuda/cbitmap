@@ -17,6 +17,9 @@
 /// let map = newmap!(;34);
 /// // length will be rounded up to a multiple of 8:
 /// assert_eq!(map.bit_len(), 40);
+/// // you can also use const exprs:
+/// let map = newmap!(;4096 * 8);
+/// assert_eq!(map.byte_len(), 4096);
 /// ```
 /// Create a bitmap with flags. The flags muts be literal 
 /// integers, and are enumerated with `|`. The length is still 
@@ -45,25 +48,25 @@ macro_rules! newmap {
     () => {
         Bitmap::<0>::new()
     };
-    (;$n:literal) => {
+    (;$n:expr) => {
         Bitmap::<{($n + 7) >> 3}>::new()
     };
     (
         $a:literal
-        ;$n:literal
+        ;$n:expr
     ) => {
         {
-            let mut map = Bitmap::<{($n + 7) >> 3}>::new();
-            map.set($a);
+            let mut map = Bitmap::<{(($n) + 7) >> 3}>::new();
+            map |= $a;
             map
         }
     };
     (
         $($a:literal)|*$(|)?
-        ;$n:literal
+        ;$n:expr
     ) => {
         {
-            let mut map = Bitmap::<{($n + 7) >> 3}>::new();
+            let mut map = Bitmap::<{(($n) + 7) >> 3}>::new();
             $(
                 map |= $a;
             )*
@@ -72,10 +75,10 @@ macro_rules! newmap {
     };
     (
         $($a:ident)|*$(|)?
-        ;$n:literal
+        ;$n:expr
     ) => {
         {
-            let mut map = Bitmap::<{($n + 7) >> 3}>::new();
+            let mut map = Bitmap::<{(($n) + 7) >> 3}>::new();
             $(
                 map |= $a;
             )*
@@ -101,10 +104,10 @@ macro_rules! newmap {
 macro_rules! he_lang {
     (
         $($a:literal)|*$(|)?
-        ;$n:literal
+        ;$n:expr
     ) => {
         {
-            let mut map = Bitmap::<{($n + 7) >> 3}>::new();
+            let mut map = Bitmap::<{(($n) + 7) >> 3}>::new();
             map$(.set($a))*;
             map
         }

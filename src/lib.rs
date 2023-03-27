@@ -16,7 +16,7 @@
 //! We provided a [`crate::bitmap::Bitmap`] type:
 //! ```ignore
 //! pub struct Bitmap<const BYTES: usize> {
-//!     bits: Option<[u8; BYTES]>,
+//!     bits: [u8; BYTES],
 //! }
 //! ```
 //! 
