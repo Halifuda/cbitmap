@@ -67,6 +67,8 @@
   the map is relatively small like 8 or 16 bits,
   you can put it on stack safely. If it is larger like 256 or
   1024 bits, you may want to put it on heap.
+
+  The alloc feature which is enabled by default is only used for formatting.
   
 ## Examples
 
