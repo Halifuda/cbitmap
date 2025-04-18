@@ -166,6 +166,7 @@
 //! not `BitRef` due to a similar issue.
 #![no_std]
 
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
 mod tools;

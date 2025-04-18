@@ -1,9 +1,59 @@
 //! Implementations of formating methods for `Bitmap`, including [`Debug`].
 
+#[cfg(feature = "alloc")]
 use alloc::{string::{String, ToString}, format};
 
 use crate::bitmap::*;
 
+#[cfg(not(feature = "alloc"))]
+impl<const BYTES: usize> core::fmt::Display for Bitmap<BYTES> {
+    /// Formats a bitmap. Only shows the last 2 bytes if the bitmap is longer.
+    /// The bytes will be separated by space `' '`. 
+    /// 
+    /// The bits will be arranged from right to left. If the bitmap is longer than 
+    /// 2 bytes, a `"..."` will show on the left.
+    /// On the very left, a bracket tells the bit length of the map (in a form 
+    /// like `"[N bits]"`). A space `' '` will be between the bit contents and this
+    /// bracket.
+    /// 
+    /// # Examples
+    /// ```
+    /// use cbitmap::bitmap::*;
+    /// 
+    /// let mut map: Bitmap<3> = 0.into();
+    /// map.set(0);
+    /// map.set(8);
+    /// let str = &format!("{map}");
+    /// assert_eq!(str, "[24 bits] ...00000001 00000001");
+    /// ```
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "[{} bits] ", BYTES * 8)?;
+        let size = 2.min(BYTES);
+        if BYTES > size {
+            write!(f, "...")?;
+        }
+        for i in 0..size {
+            if i > 0 {
+                write!(f, " ")?;
+            }
+            write!(f, "{:08b}", self.__copy_u8(size - i - 1))?;
+        }
+        Ok(())
+    }
+}
+
+#[cfg(not(feature = "alloc"))]
+impl<const BYTES: usize> core::fmt::Debug for Bitmap<BYTES> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Bitmap")
+            .field("#bytes", &BYTES)
+            .field("#bits", &(BYTES * 8))
+            .field("bits", &self.bits)
+            .finish()
+    }
+}
+
+#[cfg(feature = "alloc")]
 impl<const BYTES: usize> core::fmt::Display for Bitmap<BYTES> {
     /// Formats a bitmap. Only shows the last 2 bytes if the bitmap is longer.
     /// The bytes will be separated by space `' '`. 
@@ -41,6 +91,7 @@ impl<const BYTES: usize> core::fmt::Display for Bitmap<BYTES> {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl<const BYTES: usize> core::fmt::Debug for Bitmap<BYTES> {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         let mut contents = String::new();
@@ -63,6 +114,7 @@ impl<const BYTES: usize> core::fmt::Debug for Bitmap<BYTES> {
     }
 }
 
+#[cfg(feature = "alloc")]
 impl<const BYTES: usize> Bitmap<BYTES> {
     /// Format a range of bits into a [`Option<String>`].
     /// 
